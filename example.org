@@ -1,0 +1,37 @@
+
+
+#+title: Experiment with ob-ai extension for org-babel
+#+date: 2023:05:01
+
+ob-ai is an extension for org-mode that allows execution of source code blocks via an AI backend. Is it part of [[https://github.com/ai-mode][ai-mode]] project.
+
+* Simple example
+
+#+begin_src ai
+What is generative AI?
+#+end_src
+
+* Using custom parameters
+
+#+begin_src ai :model gpt-3.5-turbo-0301 :max-tokens 200 :timeout 60
+How far is Mars from Earth?
+#+end_src
+
+* Using a customized backend and model
+
+** Model text-davinci-002
+#+begin_src ai :backend ai--openai--completions-ob-sync-query :model text-davinci-002 :max-tokens 200
+In what year were light bulbs invented?
+#+end_src
+
+** Model text-davinci-003
+
+#+begin_src ai :backend ai--openai--completions-ob-sync-query :model text-davinci-003 :max-tokens 200
+In what year were light bulbs invented?
+#+end_src
+
+** Model gpt-3.5-turbo
+
+#+begin_src ai :model gpt-3.5-turbo :max-tokens 200
+In what year were light bulbs invented?
+#+end_src
