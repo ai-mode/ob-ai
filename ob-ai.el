@@ -40,9 +40,8 @@
 
 
 (defcustom ai-org-babel-backend 'ai--openai--chat-ob-sync-query
-  ""
-  :group 'ai-mode
-  )
+  "Backend used by org-babel-execute:ai."
+  :group 'ai-mode)
 
 
 (defcustom ai--org-babel-backends
@@ -55,7 +54,7 @@
 
 
 (defun ai-change-org-babel-backend ()
-  ""
+  "Change the current backend."
   (interactive)
   (let* ((value (completing-read ai--change-backend-prompt (mapcar #'car ai--org-babel-backends))))
     (setq ai-org-babel-backend (cdr (assoc value ai--org-babel-backends)))
@@ -68,7 +67,15 @@
                                                        (max-tokens ai--openai--default-max-tokens)
                                                        (timeout ai--openai-request-timeout)
                                                        (extra-params nil))
-  ""
+  "Execute a QUERY using the OpenAI completions API.
+
+MODEL - an AI model that needs to be used to process the request.
+
+MAX-TOKENS - The maximum number of tokens to generate answer.
+
+TIMEOUT - the duration limit for the execution of the request.
+
+EXTRA-PARAMS is a list of properties (plist) that can be used to store parameters."
   (apply 'ai--openai--completions-sync-send-query `(,query :model ,model :timeout ,timeout :max-tokens ,max-tokens :extra-params ,extra-params))
   )
 
@@ -77,7 +84,15 @@
                                                 (max-tokens ai--openai--default-max-tokens)
                                                 (timeout ai--openai-request-timeout)
                                                 (extra-params nil))
-  ""
+  "Execute a QUERY using the OpenAI ChatGPT API.
+
+MODEL - an AI model that needs to be used to process the request.
+
+MAX-TOKENS - The maximum number of tokens to generate answer.
+
+TIMEOUT - the duration limit for the execution of the request.
+
+EXTRA-PARAMS is a list of properties (plist) that can be used to store parameters."
   (apply 'ai--openai--chat-sync-send-query `(,query :model ,model :timeout ,timeout :max-tokens ,max-tokens :extra-params ,extra-params))
   )
 
