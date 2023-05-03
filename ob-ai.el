@@ -2,10 +2,10 @@
 
 ;; Copyright (C) 2023 Alex (https://github.com/lispython)
 
-;; URL: https://github.com/ai-mode/ai-mode
+;; URL: https://github.com/ai-mode/ob-ai
 ;; Version: 0.1
-;; Package-Requires: ((emacs "27.1") (ai-mode "0.1")
-;; Keywords: ai, chatgpt, gpt, org-mode, org-babel, ai-mode
+;; Package-Requires: ((emacs "27.1") (ai-mode "0.1") cl-lib)
+;; Keywords: help, tools
 
 
 ;; This file is part of GNU Emacs.
@@ -35,34 +35,43 @@
 
 (require 'ob)
 (require 'org)
-(require 'ai)
 (require 'map)
+(require 'cl-lib)
+
+(require 'ai-mode)
 
 
-(defcustom ai-org-babel-backend 'ai--openai--chat-ob-sync-query
+(defgroup ob-ai nil
+  "Support for AI interactions."
+  :prefix "ai-"
+  :group 'ai
+  :link '(url-link :tag "Repository" "https://github.com/ai-mode/ob-ai"))
+
+
+(defcustom ob-ai-org-babel-backend 'ob-ai--openai--chat-ob-sync-query
   "Backend used by org-babel-execute:ai."
-  :group 'ai-mode)
+  :group 'ai)
 
 
-(defcustom ai--org-babel-backends
-  '(("OpenAI ChatGPT" . ai--openai--chat-ob-sync-query)
-    ("OpenAI Completions" . ai--openai--completions-ob-sync-query))
+(defcustom ob-ai--org-babel-backends
+  '(("OpenAI ChatGPT" .ob-ai--openai--chat-ob-sync-query)
+    ("OpenAI Completions" . ob-ai--openai--completions-ob-sync-query))
   "An association list that maps query backend to function."
   :type '(alist :key-type (string :tag "Backend name")
                 :value-type (symbol :tag "Backend function"))
-  :group 'ai-mode)
+  :group 'ai)
 
 
-(defun ai-change-org-babel-backend ()
+(defun ob-ai-change-org-babel-backend ()
   "Change the current backend."
   (interactive)
-  (let* ((value (completing-read ai--change-backend-prompt (mapcar #'car ai--org-babel-backends))))
-    (setq ai-org-babel-backend (cdr (assoc value ai--org-babel-backends)))
+  (let* ((value (completing-read ai--change-backend-prompt (mapcar #'car ob-ai--org-babel-backends))))
+    (setq ob-ai-org-babel-backend (cdr (assoc value ob-ai--org-babel-backends)))
     (message (format "AI Org Babel backend is changed to \"%s\"" value))))
 
 
 
-(cl-defun ai--openai--completions-ob-sync-query (query &key
+(cl-defun ob-ai--openai--completions-ob-sync-query (query &key
                                                        (model ai--openai--completions-model-version)
                                                        (max-tokens ai--openai--default-max-tokens)
                                                        (timeout ai--openai-request-timeout)
@@ -76,10 +85,9 @@ MAX-TOKENS - The maximum number of tokens to generate answer.
 TIMEOUT - the duration limit for the execution of the request.
 
 EXTRA-PARAMS is a list of properties (plist) that can be used to store parameters."
-  (apply 'ai--openai--completions-sync-send-query `(,query :model ,model :timeout ,timeout :max-tokens ,max-tokens :extra-params ,extra-params))
-  )
+  (apply 'ai-openai-completions--sync-send-query `(,query :model ,model :timeout ,timeout :max-tokens ,max-tokens :extra-params ,extra-params)))
 
-(cl-defun ai--openai--chat-ob-sync-query (query &key
+(cl-defun ob-ai--openai--chat-ob-sync-query (query &key
                                                 (model ai--openai--chat-model-version)
                                                 (max-tokens ai--openai--default-max-tokens)
                                                 (timeout ai--openai-request-timeout)
@@ -93,8 +101,7 @@ MAX-TOKENS - The maximum number of tokens to generate answer.
 TIMEOUT - the duration limit for the execution of the request.
 
 EXTRA-PARAMS is a list of properties (plist) that can be used to store parameters."
-  (apply 'ai--openai--chat-sync-send-query `(,query :model ,model :timeout ,timeout :max-tokens ,max-tokens :extra-params ,extra-params))
-  )
+  (apply 'ai-openai-chat--sync-send-query `(,query :model ,model :timeout ,timeout :max-tokens ,max-tokens :extra-params ,extra-params)))
 
 
 (defvar org-babel-default-header-args:ai '((:results . "raw") (:model . nil) (:preface . nil))
@@ -119,10 +126,10 @@ This function is called by `org-babel-execute-src-block'"
       (setq backend-args (append backend-args `(:max-tokens ,max-tokens))))
 
     (if backend
-        (if (member (intern backend) (mapcar #'cdr  ai--org-babel-backends))
+        (if (member (intern backend) (mapcar #'cdr ob-ai--org-babel-backends))
             (apply (intern backend) backend-args)
           (message (format "Backend not found in backends list: %s" backend)))
-      (apply ai-org-babel-backend backend-args))))
+      (apply ob-ai-org-babel-backend backend-args))))
 
 
 (provide 'ob-ai)
