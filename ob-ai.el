@@ -4,8 +4,8 @@
 
 ;; URL: https://github.com/ai-mode/ai-mode
 ;; Version: 0.1
-;; Package-Requires: ((emacs "27.1"))
-;; Keywords: ai, chatgpt, gpt, org-mode, org-babel
+;; Package-Requires: ((emacs "27.1") (ai-mode "0.1")
+;; Keywords: ai, chatgpt, gpt, org-mode, org-babel, ai-mode
 
 
 ;; This file is part of GNU Emacs.
