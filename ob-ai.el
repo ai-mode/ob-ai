@@ -48,18 +48,17 @@
   :link '(url-link :tag "Repository" "https://github.com/ai-mode/ob-ai"))
 
 
-(defcustom ob-ai-org-babel-backend 'ob-ai--openai--chat-ob-sync-query
+(defcustom ob-ai-org-babel-backend 'ai-perform-sync-backend-query
   "Backend used by org-babel-execute:ai."
-  :group 'ai)
+  :group 'ob-ai)
 
 
 (defcustom ob-ai--org-babel-backends
-  '(("OpenAI ChatGPT" .ob-ai--openai--chat-ob-sync-query)
-    ("OpenAI Completions" . ob-ai--openai--completions-ob-sync-query))
+  '(("AI mode sync backend" . ai-perform-sync-backend-query))
   "An association list that maps query backend to function."
   :type '(alist :key-type (string :tag "Backend name")
                 :value-type (symbol :tag "Backend function"))
-  :group 'ai)
+  :group 'ob-ai)
 
 
 (defun ob-ai-change-org-babel-backend ()
@@ -70,60 +69,15 @@
     (message (format "AI Org Babel backend is changed to \"%s\"" value))))
 
 
-
-(cl-defun ob-ai--openai--completions-ob-sync-query (query &key
-                                                       (model ai--openai--completions-model-version)
-                                                       (max-tokens ai--openai--default-max-tokens)
-                                                       (timeout ai--openai-request-timeout)
-                                                       (extra-params nil))
-  "Execute a QUERY using the OpenAI completions API.
-
-MODEL - an AI model that needs to be used to process the request.
-
-MAX-TOKENS - The maximum number of tokens to generate answer.
-
-TIMEOUT - the duration limit for the execution of the request.
-
-EXTRA-PARAMS is a list of properties (plist) that can be used to store parameters."
-  (apply 'ai-openai-completions--sync-send-query `(,query :model ,model :timeout ,timeout :max-tokens ,max-tokens :extra-params ,extra-params)))
-
-(cl-defun ob-ai--openai--chat-ob-sync-query (query &key
-                                                (model ai--openai--chat-model-version)
-                                                (max-tokens ai--openai--default-max-tokens)
-                                                (timeout ai--openai-request-timeout)
-                                                (extra-params nil))
-  "Execute a QUERY using the OpenAI ChatGPT API.
-
-MODEL - an AI model that needs to be used to process the request.
-
-MAX-TOKENS - The maximum number of tokens to generate answer.
-
-TIMEOUT - the duration limit for the execution of the request.
-
-EXTRA-PARAMS is a list of properties (plist) that can be used to store parameters."
-  (apply 'ai-openai-chat--sync-send-query `(,query :model ,model :timeout ,timeout :max-tokens ,max-tokens :extra-params ,extra-params)))
-
-
-(defvar org-babel-default-header-args:ai '((:results . "raw") (:model . nil) (:preface . nil))
+(defvar org-babel-default-header-args:ai '((:results . "raw") (:preface . nil))
   "Default arguments for evaluating a AI block.")
-
 
 
 (defun org-babel-execute:ai (body params)
   "Execute a block of AI prompt in BODY with org-babel header PARAMS.
 This function is called by `org-babel-execute-src-block'"
   (let* ((backend-args (list body :extra-params params))
-         (model (map-elt params :model))
-         (timeout (map-elt params :timeout))
-         (max-tokens (map-elt params :max-tokens))
          (backend (map-elt params :backend)))
-
-    (when model
-      (setq backend-args (append backend-args `(:model ,model))))
-    (when timeout
-      (setq backend-args (append backend-args `(:timeout ,timeout))))
-    (when max-tokens
-      (setq backend-args (append backend-args `(:max-tokens ,max-tokens))))
 
     (if backend
         (if (member (intern backend) (mapcar #'cdr ob-ai--org-babel-backends))
